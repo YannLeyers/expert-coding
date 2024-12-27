@@ -1,74 +1,149 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Image, StyleSheet, Platform, ScrollView, View, Text } from 'react-native';
+import { useFonts } from 'expo-font';
+import { fetchAlbumDetails } from '@/services/apiService'; // Ensure this service is correctly implemented
+import BookmarkInactive from '@/assets/images/white-bookmark-inactive.png'; // Adjust path based on your folder structure
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
+  // Load fonts
+  const [fontsLoaded] = useFonts({
+    'Vollkorn-Italic': require('@/assets/fonts/Vollkorn-BlackItalic.ttf'), // Adjust this path based on your folder structure
+    'Montserrat-Bold': require('@/assets/fonts/Montserrat-Bold.ttf'), // Adjust this path based on your folder structure
+  });
+
+  // State to hold album details
+  const [albumCover, setAlbumCover] = useState<string | null>(null);
+
+  // Fetch album details on component mount
+  useEffect(() => {
+    const fetchAlbum = async () => {
+      const albumId = '1uE3dRPe3SrGdNhd1nWlSa';
+      const albumData = await fetchAlbumDetails(albumId);
+      if (albumData && albumData.images && albumData.images.length > 0) {
+        setAlbumCover(albumData.images[0].url); // Set the URL of the album cover
+      }
+    };
+
+    fetchAlbum();
+  }, []);
+
+  if (!fontsLoaded) {
+    return <ThemedText>Loading...</ThemedText>; // Show loading text while fonts are loading
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <ThemedText type="title" style={styles.headerText}>Records</ThemedText>
+      </View>
+
+      {/* Scrollable Content */}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* New Releases Section */}
+        <ThemedView style={styles.stepContainer}>
+          <ThemedText type="subtitle" style={styles.subtitleText}>New Releases</ThemedText>
+          {/* Shape Container */}
+          <View style={styles.shapeContainer}>
+            {albumCover ? (
+              <Image
+                source={{ uri: albumCover }}
+                style={styles.innerSquare} // Replace innerSquare's placeholder color with the album cover
+              />
+            ) : (
+              <View style={styles.innerSquare} /> // Show a placeholder until album cover is fetched
+            )}
+            <View style={styles.infoContainer}>
+              <Text style={styles.seeDetails}>See Details</Text>
+              <View style={styles.bookmarkButton}>
+                <Image
+                  source={BookmarkInactive}
+                  style={styles.bookmarkIcon}
+                  resizeMode="contain"
+                />
+              </View>
+            </View>
+          </View>
+        </ThemedView>
+
+        <ThemedView style={styles.stepContainer}>
+          <ThemedText type="subtitle" style={styles.subtitleText}>Popular Records</ThemedText>
+        </ThemedView>
+
+        <ThemedView style={styles.stepContainer}>
+          <ThemedText type="subtitle" style={styles.subtitleText}>Your Wishlist</ThemedText>
+        </ThemedView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFBE5', // Set your desired background color
+  },
+  header: {
+    width: '100%', // Max width of the screen
+    backgroundColor: '#F95530', // Hex color for background
+    paddingVertical: 10, // Vertical padding for the header
+    borderBottomWidth: 2, // Outline thickness
+    borderBottomColor: '#000000', // Outline color
+  },
+  headerText: {
+    color: '#000', // Black color for the text
+    fontFamily: 'Vollkorn-Italic', // Apply Vollkorn-Italic font
+    marginLeft: 20,
+    marginTop: 60,
+  },
+  subtitleText: {
+    color: '#000', // Black color for the text
+    fontFamily: 'Montserrat-Bold',
+    marginLeft: 20,
+    marginBottom: 10,
+    marginTop: 40,
+  },
+  shapeContainer: {
+    width: 266,
+    height: 331,
+    borderWidth: 2,
+    borderColor: '#000',
+    marginVertical: 20,
+    marginLeft: 20,
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  innerSquare: {
+    width: 246,
+    height: 246,
+    backgroundColor: '#FFC0CB', // Placeholder color
+    margin: 10,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  infoContainer: {
+    flexDirection: 'row',
+  },
+  seeDetails: {
+    fontSize: 16,
+    color: '#000',
+    width: 190,
+    height: 45,
+    backgroundColor: '#FFC0CB',
+    fontFamily: 'Montserrat-Bold',
+    marginRight: 10,
+    textAlign: 'center', // Centers text horizontally
+    paddingVertical: 13, // Adjust this value for visual centering
+  },
+  bookmarkButton: {
+    width: 45,
+    height: 45,
+    backgroundColor: '#000',
+    justifyContent: 'center', // Centers vertically
+    alignItems: 'center',    // Centers horizontally
+  },
+  bookmarkIcon: {
+    width: 15,
+    height: 21,
   },
 });
