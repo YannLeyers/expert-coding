@@ -1,29 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Image, StyleSheet, Platform, ScrollView, View, Text } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, ScrollView, View, Text } from 'react-native';
 import { useFonts } from 'expo-font';
 import { fetchAlbumDetails } from '@/services/apiService'; // Ensure this service is correctly implemented
-import BookmarkInactive from '@/assets/images/white-bookmark-inactive.png'; // Adjust path based on your folder structure
+import InfoIcon from '@/assets/images/info.png';
+import Album from '../album'; // Import the Album component
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
-export default function HomeScreen() {
+export default function Index() {
   // Load fonts
   const [fontsLoaded] = useFonts({
-    'Vollkorn-Italic': require('@/assets/fonts/Vollkorn-BlackItalic.ttf'), // Adjust this path based on your folder structure
-    'Montserrat-Bold': require('@/assets/fonts/Montserrat-Bold.ttf'), // Adjust this path based on your folder structure
+    'Vollkorn-Italic': require('@/assets/fonts/Vollkorn-BlackItalic.ttf'),
+    'Montserrat-Bold': require('@/assets/fonts/Montserrat-Bold.ttf'),
   });
 
-  // State to hold album details
   const [albumCover, setAlbumCover] = useState<string | null>(null);
+  const [showAlbum, setShowAlbum] = useState(false); // State to control navigation
 
-  // Fetch album details on component mount
   useEffect(() => {
     const fetchAlbum = async () => {
       const albumId = '1uE3dRPe3SrGdNhd1nWlSa';
       const albumData = await fetchAlbumDetails(albumId);
       if (albumData && albumData.images && albumData.images.length > 0) {
-        setAlbumCover(albumData.images[0].url); // Set the URL of the album cover
+        setAlbumCover(albumData.images[0].url);
       }
     };
 
@@ -31,51 +31,40 @@ export default function HomeScreen() {
   }, []);
 
   if (!fontsLoaded) {
-    return <ThemedText>Loading...</ThemedText>; // Show loading text while fonts are loading
+    return <ThemedText>Loading...</ThemedText>;
+  }
+
+  if (showAlbum) {
+    return <Album setShowAlbum={setShowAlbum} />; // Pass setShowAlbum as a prop
   }
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <ThemedText type="title" style={styles.headerText}>Records</ThemedText>
-      </View>
+      <ScrollView>
+        <ThemedText type="subtitle" style={styles.subtitleText}>New Releases</ThemedText>
+        <View style={styles.orangeLine} /> {/* Add the orange line */}
+        <View style={styles.shapeContainer}>
+          {albumCover ? (
+            <Image
+              source={{ uri: albumCover }}
+              style={styles.innerSquare} // Replace innerSquare's placeholder color with the album cover
+            />
+          ) : (
+            <View style={styles.innerSquare} /> // Show a placeholder until album cover is fetched
+          )}
+          <View style={styles.infoContainer}>
+            <Text style={styles.seeDetails}>Bird's Eye</Text>
 
-      {/* Scrollable Content */}
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* New Releases Section */}
-        <ThemedView style={styles.stepContainer}>
-          <ThemedText type="subtitle" style={styles.subtitleText}>New Releases</ThemedText>
-          {/* Shape Container */}
-          <View style={styles.shapeContainer}>
-            {albumCover ? (
+            <TouchableOpacity style={styles.infoButton} onPress={() => setShowAlbum(true)}>
               <Image
-                source={{ uri: albumCover }}
-                style={styles.innerSquare} // Replace innerSquare's placeholder color with the album cover
+                source={InfoIcon}  // This is your info icon
+                style={styles.infoIcon}
+                resizeMode="contain"
               />
-            ) : (
-              <View style={styles.innerSquare} /> // Show a placeholder until album cover is fetched
-            )}
-            <View style={styles.infoContainer}>
-              <Text style={styles.seeDetails}>See Details</Text>
-              <View style={styles.bookmarkButton}>
-                <Image
-                  source={BookmarkInactive}
-                  style={styles.bookmarkIcon}
-                  resizeMode="contain"
-                />
-              </View>
-            </View>
+            </TouchableOpacity>
+
           </View>
-        </ThemedView>
-
-        <ThemedView style={styles.stepContainer}>
-          <ThemedText type="subtitle" style={styles.subtitleText}>Popular Records</ThemedText>
-        </ThemedView>
-
-        <ThemedView style={styles.stepContainer}>
-          <ThemedText type="subtitle" style={styles.subtitleText}>Your Wishlist</ThemedText>
-        </ThemedView>
+        </View>
       </ScrollView>
     </View>
   );
@@ -84,14 +73,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFBE5', // Set your desired background color
-  },
-  header: {
-    width: '100%', // Max width of the screen
-    backgroundColor: '#F95530', // Hex color for background
-    paddingVertical: 10, // Vertical padding for the header
-    borderBottomWidth: 2, // Outline thickness
-    borderBottomColor: '#000000', // Outline color
+    backgroundColor: '#FFFBE5',
   },
   headerText: {
     color: '#000', // Black color for the text
@@ -106,13 +88,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 40,
   },
+  orangeLine: {
+    height: 2,
+    backgroundColor: '#F95530',
+    width: 215,
+    marginLeft: 45,
+  },
   shapeContainer: {
     width: 266,
     height: 331,
     borderWidth: 2,
     borderColor: '#000',
     marginVertical: 20,
-    marginLeft: 20,
     alignItems: 'center',
   },
   innerSquare: {
@@ -126,24 +113,24 @@ const styles = StyleSheet.create({
   },
   seeDetails: {
     fontSize: 16,
-    color: '#000',
+    color: '#fff',
     width: 190,
     height: 45,
-    backgroundColor: '#FFC0CB',
-    fontFamily: 'Montserrat-Bold',
+    backgroundColor: '#000',
+    fontFamily: 'Montserrat-Medium',
     marginRight: 10,
     textAlign: 'center', // Centers text horizontally
     paddingVertical: 13, // Adjust this value for visual centering
   },
-  bookmarkButton: {
+  infoButton: {
     width: 45,
     height: 45,
     backgroundColor: '#000',
     justifyContent: 'center', // Centers vertically
     alignItems: 'center',    // Centers horizontally
   },
-  bookmarkIcon: {
-    width: 15,
-    height: 21,
+  infoIcon: {
+    width: 25,
+    height: 25,
   },
 });
