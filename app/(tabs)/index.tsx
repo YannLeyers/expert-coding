@@ -14,30 +14,60 @@ export default function Index() {
   });
 
   const [albums, setAlbums] = useState<any[]>([]);
+  const [newReleases, setNewReleases] = useState<any[]>([]); // New albums state
   const [selectedAlbum, setSelectedAlbum] = useState(null); // State to hold selected album details
 
   const albumIds = [
-    '1uE3dRPe3SrGdNhd1nWlSa', // Existing album
-    '7kFyd5oyJdVX2pIi6P4iHE', // Additional album 1
-    '3VQkNrG74QPY4rHBPoyZYZ', // Additional album 2
-    '0YIOpXQvcbiDNPusSqi5Ew', // Additional album 3
-    '3wSWMuHQOJ2gU22t5sCouR', // Additional album 4
-    '0U28P0QVB1QRxpqp5IHOlH', // Additional album 4
-    '4C23ofFqNhsaAEkThw2yRB', // Additional album 4
+    '1uE3dRPe3SrGdNhd1nWlSa',
+    '7kFyd5oyJdVX2pIi6P4iHE',
+    '3VQkNrG74QPY4rHBPoyZYZ',
+    '0YIOpXQvcbiDNPusSqi5Ew',
+    '3wSWMuHQOJ2gU22t5sCouR',
+    '0U28P0QVB1QRxpqp5IHOlH',
+    '4C23ofFqNhsaAEkThw2yRB',
+    '03guxdOi12XJbnvxvxbpwG',
+  ];
+
+  const newReleaseIds = [
+    '2fenSS68JI1h4Fo296JfGr', // Unique IDs for new releases
+    '1KNUCVXgIxKUGiuEB8eG0i',
+    '4HTy9WFTYooRjE9giTmzAF',
+    '0DucmDrdJM4evPXMbFJXBS',
+    '1BrBVH1v92OAzRDijSyhj9',
+    '2pOEFqvfxp5uUQ8vQEmVA0',
+    '1CTm3ARqDETSm7GfvNYNJp',
+    '22PkV1Le9P3X4RY4xtmK0q',
   ];
 
   useEffect(() => {
     const fetchAlbums = async () => {
       try {
+        // Fetch for popular records
         const albumPromises = albumIds.map(async (id) => {
           const albumData = await fetchAlbumDetails(id);
           if (albumData && albumData.images && albumData.images.length > 0) {
             return {
               id,
               name: albumData.name,
-              artist: albumData.artist || 'Unknown Artist', // Include artist info if available
-              releaseDate: albumData.release_date || 'Unknown Date', // Include release date
-              genre: albumData.genre || 'Unknown Genre', // Include genre if available
+              artist: albumData.artist || 'Unknown Artist',
+              releaseDate: albumData.release_date || 'Unknown Date',
+              genre: albumData.genre || 'Unknown Genre',
+              cover: albumData.images[0].url,
+            };
+          }
+          return null;
+        });
+
+        // Fetch for new releases
+        const newReleasePromises = newReleaseIds.map(async (id) => {
+          const albumData = await fetchAlbumDetails(id);
+          if (albumData && albumData.images && albumData.images.length > 0) {
+            return {
+              id,
+              name: albumData.name,
+              artist: albumData.artist || 'Unknown Artist',
+              releaseDate: albumData.release_date || 'Unknown Date',
+              genre: albumData.genre || 'Unknown Genre',
               cover: albumData.images[0].url,
             };
           }
@@ -45,7 +75,10 @@ export default function Index() {
         });
 
         const resolvedAlbums = await Promise.all(albumPromises);
+        const resolvedNewReleases = await Promise.all(newReleasePromises);
+
         setAlbums(resolvedAlbums.filter((album) => album !== null));
+        setNewReleases(resolvedNewReleases.filter((album) => album !== null));
       } catch (error) {
         console.error('Error fetching albums:', error);
       }
@@ -61,31 +94,24 @@ export default function Index() {
   const renderAlbum = ({ item }: { item: any }) => (
     <View style={styles.shapeContainer}>
       {item.cover ? (
-        <Image
-          source={{ uri: item.cover }}
-          style={styles.innerSquare} // Album cover
-        />
+        <Image source={{ uri: item.cover }} style={styles.innerSquare} />
       ) : (
-        <View style={styles.innerSquare} /> // Placeholder
+        <View style={styles.innerSquare} />
       )}
       <View style={styles.infoContainer}>
         <Text style={styles.seeDetails}>{item.name || 'Loading...'}</Text>
         <TouchableOpacity
           style={styles.infoButton}
-          onPress={() => setSelectedAlbum(item)} // Pass the album's data to the state
+          onPress={() => setSelectedAlbum(item)}
         >
-          <Image
-            source={InfoIcon} // Info icon
-            style={styles.infoIcon}
-            resizeMode="contain"
-          />
+          <Image source={InfoIcon} style={styles.infoIcon} resizeMode="contain" />
         </TouchableOpacity>
       </View>
     </View>
   );
 
   if (selectedAlbum) {
-    return <Album album={selectedAlbum} setShowAlbum={setSelectedAlbum} />; // Pass selected album details and state setter
+    return <Album album={selectedAlbum} setShowAlbum={setSelectedAlbum} />;
   }
 
   return (
@@ -104,23 +130,15 @@ export default function Index() {
 
         <ThemedText type="subtitle" style={styles.subtitleText}>Popular Records</ThemedText>
         <View style={styles.orangeLineTwo} />
-
-        {/* Shape Container */}
-        <View style={styles.smallShapeContainer}>
-          {/* Inner Square */}
-          <View style={styles.smallInnerSquare} />
-
-          {/* Shape Row */}
-          <View style={styles.shapeRow}>
-            {/* Rectangle Shape */}
-            <View style={styles.rectangleShape}>
-              <Text style={styles.detailsText}>Album Details</Text>  {/* Details Text */}
-            </View>
-          </View>
-        </View>
-
+        <FlatList
+          horizontal
+          data={newReleases}
+          renderItem={renderAlbum}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.horizontalList}
+          showsHorizontalScrollIndicator={false}
+        />
       </ScrollView>
-
     </View>
   );
 }

@@ -2,6 +2,7 @@
   "name": "expert-coding",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "start": "node app.js",
     "reset-project": "node ./scripts/reset-project.js",
@@ -34,6 +35,7 @@
     "expo-symbols": "~0.2.0",
     "expo-system-ui": "~4.0.6",
     "expo-web-browser": "~14.0.1",
+    "express": "^4.21.2",
     "qs": "^6.13.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
