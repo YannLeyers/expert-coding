@@ -82,8 +82,10 @@ export default function Index() {
   return (
     <View style={styles.container}>
       <ScrollView>
-        <ThemedText type="subtitle" style={styles.subtitleText}>A</ThemedText>
-        <View style={styles.orangeLine} />
+        <View style={styles.subtitleContainer}>
+          <ThemedText type="subtitle" style={styles.subtitleText}>A</ThemedText>
+          <View style={styles.orangeLine} />
+        </View>
         <FlatList
           horizontal
           data={albums}
@@ -102,19 +104,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFBE5',
   },
+  subtitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center', // Ensures vertical alignment
+    marginLeft: 20,
+    marginTop: 20,
+    marginBottom: 52, // Adds spacing between the subtitle and the horizontal list
+  },
   subtitleText: {
     color: '#000',
     fontFamily: 'Montserrat-Bold',
-    marginLeft: 20,
-    marginBottom: 10,
-    marginTop: 20,
+    marginRight: 20, // Adds spacing between text and line
   },
   orangeLine: {
     height: 2,
     backgroundColor: '#F95530',
-    width: 215,
-    marginLeft: 45,
-    marginBottom: 40,
+    width: 295, // Adjust width as needed
   },
   horizontalList: {
     paddingHorizontal: 20,

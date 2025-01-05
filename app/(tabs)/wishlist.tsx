@@ -1,74 +1,206 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Image, StyleSheet, TouchableOpacity, ScrollView, View, Text, FlatList } from 'react-native';
+import { useFonts } from 'expo-font';
+import { fetchAlbumDetails } from '@/services/apiService'; // Ensure this service is correctly implemented
+import InfoIcon from '@/assets/images/info.png';
+import Album from '../album'; // Import the Album component
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 
-export default function HomeScreen() {
+export default function Index() {
+  const [fontsLoaded] = useFonts({
+    'Vollkorn-Italic': require('@/assets/fonts/Vollkorn-BlackItalic.ttf'),
+    'Montserrat-Bold': require('@/assets/fonts/Montserrat-Bold.ttf'),
+  });
+
+  const [albums, setAlbums] = useState<any[]>([]);
+  const [selectedAlbum, setSelectedAlbum] = useState(null); // State to hold selected album details
+
+  const albumIds = [
+    '48i37aZTC1prDr4EcpQeEa',
+    '2eRJUtI7nXrQ5uYQ7tzTo9',
+    '512J2VIGOTP50qp5MNEUyG',
+  ];
+
+  useEffect(() => {
+    const fetchAlbums = async () => {
+      try {
+        // Fetch for popular records
+        const albumPromises = albumIds.map(async (id) => {
+          const albumData = await fetchAlbumDetails(id);
+          if (albumData && albumData.images && albumData.images.length > 0) {
+            return {
+              id,
+              name: albumData.name,
+              artist: albumData.artist || 'Unknown Artist',
+              releaseDate: albumData.release_date || 'Unknown Date',
+              genre: albumData.genre || 'Unknown Genre',
+              cover: albumData.images[0].url,
+            };
+          }
+          return null;
+        });
+
+        const resolvedAlbums = await Promise.all(albumPromises);
+
+        setAlbums(resolvedAlbums.filter((album) => album !== null));
+      } catch (error) {
+        console.error('Error fetching albums:', error);
+      }
+    };
+
+    fetchAlbums();
+  }, []);
+
+  if (!fontsLoaded) {
+    return <ThemedText>Loading...</ThemedText>;
+  }
+
+  const renderAlbum = ({ item }: { item: any }) => (
+    <View style={styles.shapeContainer}>
+      {item.cover ? (
+        <Image source={{ uri: item.cover }} style={styles.innerSquare} />
+      ) : (
+        <View style={styles.innerSquare} />
+      )}
+      <View style={styles.infoContainer}>
+        <Text style={styles.seeDetails}>{item.name || 'Loading...'}</Text>
+        <TouchableOpacity
+          style={styles.infoButton}
+          onPress={() => setSelectedAlbum(item)}
+        >
+          <Image source={InfoIcon} style={styles.infoIcon} resizeMode="contain" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  if (selectedAlbum) {
+    return <Album album={selectedAlbum} setShowAlbum={setSelectedAlbum} />;
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <View style={styles.container}>
+      <ScrollView>
+        <View style={styles.subtitleContainer}>
+          <ThemedText type="subtitle" style={styles.subtitleText}>A</ThemedText>
+          <View style={styles.orangeLine} />
+        </View>
+        <FlatList
+          horizontal
+          data={albums}
+          renderItem={renderAlbum}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.horizontalList}
+          showsHorizontalScrollIndicator={false}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">bruhg!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFBE5',
+  },
+  subtitleContainer: {
     flexDirection: 'row',
+    alignItems: 'center', // Ensures vertical alignment
+    marginLeft: 20,
+    marginTop: 20,
+    marginBottom: 52,
+  },
+  subtitleText: {
+    color: '#000',
+    fontFamily: 'Montserrat-Bold',
+    marginRight: 20, // Adds spacing between text and line
+  },
+  orangeLine: {
+    height: 2,
+    backgroundColor: '#F95530',
+    width: 295, // Adjust width as needed
+  },
+  horizontalList: {
+    paddingHorizontal: 20,
+  },
+  shapeContainer: {
+    width: 266,
+    height: 335,
+    borderWidth: 2,
+    borderColor: '#000',
+    marginRight: 20,
+    marginBottom: 40,
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  smallShapeContainer: {
+    width: 158,
+    height: 203,
+    borderWidth: 2,
+    borderColor: '#000',
+    alignItems: 'center',
+    marginBottom: 20,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  innerSquare: {
+    width: 246,
+    height: 246,
+    backgroundColor: '#FFC0CB', // Placeholder color
+    marginTop: 10,
+    marginBottom: 20,
   },
+  smallInnerSquare: {
+    width: 138,
+    height: 138,
+    backgroundColor: '#FFC0CB', // Placeholder color
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  shapeRow: {
+    flexDirection: 'row', // Align the rectangle and square horizontally
+  },
+  rectangleShape: {
+    width: 138,
+    height: 35,
+    backgroundColor: '#000', // Rectangle color
+    justifyContent: 'center',
+    alignItems: 'center',  // Center the text horizontally and vertically
+  },
+  squareShape: {
+    width: 35,
+    height: 35,
+    backgroundColor: '#000', // Square color
+  },
+  gridContainer: {
+    paddingHorizontal: 20,
+  },
+  infoContainer: {
+    flexDirection: 'row',
+  },
+  seeDetails: {
+    fontSize: 16,
+    color: '#fff',
+    width: 190,
+    height: 45,
+    backgroundColor: '#000',
+    fontFamily: 'Montserrat-Medium',
+    marginRight: 10,
+    textAlign: 'center',
+    paddingVertical: 13,
+  },
+  infoButton: {
+    width: 45,
+    height: 45,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoIcon: {
+    width: 25,
+    height: 25,
+  },
+  detailsText: {
+    color: '#FFF',  // White text color
+    fontSize: 13,  // Adjust font size as needed
+    fontFamily: 'Montserrat-Medium',  // Example font family (change as needed)
+  }
 });
