@@ -15,6 +15,7 @@ export default function Index() {
 
   const [albums, setAlbums] = useState<any[]>([]);
   const [newReleases, setNewReleases] = useState<any[]>([]); // New albums state
+  const [recommended, setRecommended] = useState<any[]>([]); // New albums state
   const [selectedAlbum, setSelectedAlbum] = useState(null); // State to hold selected album details
 
   const albumIds = [
@@ -37,6 +38,17 @@ export default function Index() {
     '2pOEFqvfxp5uUQ8vQEmVA0',
     '1CTm3ARqDETSm7GfvNYNJp',
     '22PkV1Le9P3X4RY4xtmK0q',
+  ];
+
+  const recommendedIds = [
+    '4zP3lXg6RHEiUDOtUkr5yh', // Unique IDs for new releases
+    '3QYrEoeYrBdBNrtsuoCor7',
+    '5sFj47dMyRaQo3sVoElik2',
+    '3G77BQuJy3jahjdkKQNNNM',
+    '2ccGlDnYg0D9qAZHDq55Vm',
+    '1qwlxZTNLe1jq3b0iidlue',
+    '44JtWis3WYHBL7YcmIPobL',
+    '22ljnmjYzy4TS5tCtaRIUE',
   ];
 
   useEffect(() => {
@@ -74,11 +86,29 @@ export default function Index() {
           return null;
         });
 
+        // Fetch for new releases
+        const recommendedPromise = recommendedIds.map(async (id) => {
+          const albumData = await fetchAlbumDetails(id);
+          if (albumData && albumData.images && albumData.images.length > 0) {
+            return {
+              id,
+              name: albumData.name,
+              artist: albumData.artist || 'Unknown Artist',
+              releaseDate: albumData.release_date || 'Unknown Date',
+              genre: albumData.genre || 'Unknown Genre',
+              cover: albumData.images[0].url,
+            };
+          }
+          return null;
+        });
+
         const resolvedAlbums = await Promise.all(albumPromises);
         const resolvedNewReleases = await Promise.all(newReleasePromises);
+        const resolvedRecommended = await Promise.all(recommendedPromise);
 
         setAlbums(resolvedAlbums.filter((album) => album !== null));
         setNewReleases(resolvedNewReleases.filter((album) => album !== null));
+        setRecommended(resolvedRecommended.filter((album) => album !== null));
       } catch (error) {
         console.error('Error fetching albums:', error);
       }
@@ -138,6 +168,17 @@ export default function Index() {
           contentContainerStyle={styles.horizontalList}
           showsHorizontalScrollIndicator={false}
         />
+
+        <ThemedText type="subtitle" style={styles.subtitleText}>Records For You</ThemedText>
+        <View style={styles.orangeLineTwo} />
+        <FlatList
+          horizontal
+          data={recommended}
+          renderItem={renderAlbum}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.horizontalList}
+          showsHorizontalScrollIndicator={false}
+        />
       </ScrollView>
     </View>
   );
@@ -153,7 +194,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat-Bold',
     marginLeft: 20,
     marginBottom: 10,
-    marginTop: 40,
+    marginTop: 20,
   },
   orangeLine: {
     height: 2,
@@ -178,6 +219,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#000',
     marginRight: 20,
+    marginBottom: 40,
     alignItems: 'center',
   },
   smallShapeContainer: {
