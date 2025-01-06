@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { addToCollectionService } from '@/frontend/apiService';  // Make sure the path is correct
 
 interface AlbumProps {
   album: {
@@ -10,9 +11,23 @@ interface AlbumProps {
     genre: string;
   };
   setShowAlbum: (album: null) => void;
+  addToCollection: (album: any) => void;
+  addToWishlist: (album: any) => void;
 }
 
-export default function Album({ album, setShowAlbum }: AlbumProps) {
+export default function Album({ album, setShowAlbum, addToCollection, addToWishlist }: AlbumProps) {
+
+  // Define the function to handle the collection action
+  const handleAddToCollection = async (album: any) => {
+    try {
+      // Call the service function that communicates with your backend
+      await addToCollectionService(album);
+      console.log('Album added to collection!');
+    } catch (error) {
+      console.error('Error adding album to collection:', error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -29,11 +44,17 @@ export default function Album({ album, setShowAlbum }: AlbumProps) {
         <Text style={styles.albumText}>Release Date: {album.releaseDate}</Text>
         <Text style={styles.albumText}>Genre: {album.genre}</Text>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.collectionButton}>
-            <Text style={styles.buttonText}>Collection</Text>
+          <TouchableOpacity
+            style={styles.collectionButton}
+            onPress={() => handleAddToCollection(album)} // Use the new handleAddToCollection function
+          >
+            <Text style={styles.buttonText}>Add to Collection</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.wishlistButton}>
-            <Text style={styles.buttonText}>Wishlist</Text>
+          <TouchableOpacity
+            style={styles.wishlistButton}
+            onPress={() => addToWishlist(album)}
+          >
+            <Text style={styles.buttonText}>Add to Wishlist</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -48,12 +69,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 40, // Adjust as needed for spacing
+    paddingTop: 40,
   },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20, // Adds spacing between back button and the album cover
+    marginBottom: 20,
   },
   backIcon: {
     width: 12,
@@ -78,17 +99,17 @@ const styles = StyleSheet.create({
   albumName: {
     fontFamily: 'Montserrat-Bold',
     fontSize: 25,
-    color: '#F95530', // Album Name color
+    color: '#F95530',
   },
   separator: {
     fontFamily: 'Montserrat-Bold',
     fontSize: 25,
-    color: '#6D6D66', // Separator color
+    color: '#6D6D66',
   },
   artistName: {
     fontFamily: 'Montserrat-Bold',
     fontSize: 25,
-    color: '#000000', // Artist Name color
+    color: '#000000',
   },
   albumText: {
     fontSize: 18,
